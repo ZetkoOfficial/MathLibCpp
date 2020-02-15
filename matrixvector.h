@@ -1,13 +1,14 @@
 #include <iostream>
 #include <iomanip>
+#include <cmath>
 #include <functional>
 #include <vector>
 #include <string>
 
-using namespace std;
-typedef vector<vector<double>> m_def;
+typedef std::vector<std::vector<double>> m_def;
 
 namespace matrixvector {
+using namespace std;
 
 typedef std::vector<double> vector;
 
@@ -96,6 +97,15 @@ vector apply_function(const vector& v1, const vector& v2, function<double(double
     return res;
 }
 
+/*
+Returns the length of the vector.
+*/
+double abs(const vector& vec) {
+    double res = 0;
+    for(int i = 0; i < vec.size(); i++) res += vec[i] * vec[i];
+
+    return sqrt(res);
+}
 
 /*Adds matrices entry-wise.*/
 matrix operator+ (const matrix& m1, const matrix& m2){
@@ -154,13 +164,26 @@ matrix operator* (const matrix& m1, const matrix& m2) {
 }
 
 /*
+Returns the dot product of vectors.
+*/
+double operator* (const vector& v1, const vector& v2) {
+    double res = 0;
+    for(int i = 0; i < v1.size(); i++) res += v1[i] * v2[i];
+
+    return res;
+}
+
+/*
 Writes the matrix to a stream. 
 The matrix entries are of fixed length 5.
 */
 ostream& operator<<(ostream& stream, const matrix& mat) {
+    stream << "Matrix " << mat.height << "x" << mat.width << "\n";
+
     for(int i = 0; i < mat.height; i++){
-        for(int j = 0; j < mat.width; j++) stream << setw(5) << mat(i, j) << " ";
-        cout << "\n";
+        cout << "| ";
+        for(int j = 0; j < mat.width; j++) stream << fixed << setprecision(5) << setw(10) << mat(i, j) << " ";
+        cout << " |\n";
     }
 
     return stream;
@@ -170,8 +193,11 @@ Writes the vector to a stream.
 The vector entries are of fixed length 5.
 */
 ostream& operator<<(ostream& stream, const vector& vec) {
-    for(int i = 0; i < vec.size(); i++) stream << setw(5) << vec[i] << " ";
-    cout << "\n";
+    stream << "Vector " << vec.size() << "x1 \n";
+    
+    cout << "| ";
+    for(int i = 0; i < vec.size(); i++) stream << fixed << setprecision(5) << setw(10) << vec[i] << " ";
+    cout << " |\n";
 
     return stream;
 }
