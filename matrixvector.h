@@ -5,12 +5,14 @@
 #include <string>
 
 using namespace std;
-
 typedef vector<vector<double>> m_def;
+
 namespace matrixvector {
 
+typedef std::vector<double> vector;
+
 class matrix {
-    vector<vector<double>> matrix_arr;
+    std::vector<std::vector<double>> matrix_arr;
     public:
     int width, height;
 
@@ -18,24 +20,29 @@ class matrix {
     matrix(int height, int width) {
         this->height = height;
         this->width = width;
-        this->matrix_arr = vector<vector<double>> (height, vector<double>(width));
+        this->matrix_arr = std::vector<std::vector<double>> (height, std::vector<double>(width));
     }
-    matrix(vector<vector<double>> matrix_arr) {
+    matrix(std::vector<std::vector<double>> matrix_arr) {
         this->height = matrix_arr.size();
         this->width = matrix_arr[0].size();
         this->matrix_arr = matrix_arr;
     }
 
-    //Value at row i and column j
+    //Reference of value at row i and column j
     double& operator() (int i, int j) {
         return matrix_arr[i][j];
     }
 
+    //Value at row i and column j
     double operator() (int i, int j) const {
         return matrix_arr[i][j];
     }
 
-    //Transpose of matrix
+    /*
+    Returns the transpose of this matrix.
+
+    Time complexity: O(width*height).
+    */
     matrix T() {
         matrix res (width, height);
         for(int i = 0; i < height; i++){
@@ -45,37 +52,93 @@ class matrix {
         return res;
     }
 };
-//Applies a function to the matrix
-matrix apply_function(const matrix& mat, double function(double)){
+/*
+Applies a function which determines an entry ij of the result matrix, from entry ij. 
+*/
+matrix apply_function(const matrix& mat, function<double(double)> f){
     matrix res (mat.height, mat.width);
     for(int i = 0; i < mat.height; i++){
-        for(int j = 0; j < mat.width; j++) res(i, j) = function(mat(i, j));
+        for(int j = 0; j < mat.width; j++) res(i, j) = f(mat(i, j));
     }
 
     return res;
 }
 
-//Applies a function to the matrix
-matrix apply_function(const matrix& m1, const matrix& m2, double function(double, double)){
+/*
+Applies a function which determines an entry ij of the result matrix, from entries ij of two matrices. 
+*/
+matrix apply_function(const matrix& m1, const matrix& m2, function<double(double, double)> f){
     matrix res (m1.height, m1.width);
     for(int i = 0; i < m1.height; i++){
-        for(int j = 0; j < m1.width; j++) res(i, j) = function(m1(i, j), m2(i, j));
+        for(int j = 0; j < m1.width; j++) res(i, j) = f(m1(i, j), m2(i, j));
     }
 
     return res;
 }
 
-//Matrix addtion
+/*
+Applies a function which determines an entry i of the result vector, from entry i. 
+*/
+vector apply_function(const vector& vec, function<double(double)> f){
+    vector res (vec.size());
+    for(int i = 0; i < vec.size(); i++) res[i] = f(vec[i]);
+
+    return res;
+}
+
+/*
+Applies a function which determines an entry i of the result vector, from entries i of two vectors. 
+*/
+vector apply_function(const vector& v1, const vector& v2, function<double(double, double)> f){
+    vector res (v1.size());
+    for(int i = 0; i < v1.size(); i++) res[i] = f(v1[i], v2[i]);
+
+    return res;
+}
+
+
+/*Adds matrices entry-wise.*/
 matrix operator+ (const matrix& m1, const matrix& m2){
     return apply_function(m1, m2, [](double x, double y){return x + y;});
 }
+/*Adds vectors entry-wise.*/
+vector operator+ (const vector& v1, const vector& v2){
+    return apply_function(v1, v2, [](double x, double y){return x + y;});
+}
 
-//Matrix subtraction
+
+/*Subtracts matrices entry-wise.*/
 matrix operator- (const matrix& m1, const matrix& m2){
     return apply_function(m1, m2, [](double x, double y){return x - y;});
 }
+/*Subtracts vectors entry-wise.*/
+vector operator- (const vector& v1, const vector& v2){
+    return apply_function(v1, v2, [](double x, double y){return x - y;});
+}
 
-//Matrix multiplication
+
+/*Returns matrix with every entry scaled by a constant.*/
+matrix operator* (const double& d, const matrix& mat) {
+    return apply_function(mat, [d](double i) {return i * d;});
+}
+/*Returns vector with every entry scaled by a constant.*/
+vector operator* (const double& d, const vector& vec) {
+    return apply_function(vec, [d](double i) {return i * d;});
+}
+
+
+/*Returns matrix with every entry scaled by a constant.*/
+matrix operator* (const matrix& mat, const double& d) {
+    return apply_function(mat, [d](double i) {return i * d;});
+}
+/*Returns vector with every entry scaled by a constant.*/
+vector operator* (const vector& vec, const double& d) {
+    return apply_function(vec, [d](double i) {return i * d;});
+}
+
+/*
+Returns matrix which is the result of matrix multiplication.
+*/ 
 matrix operator* (const matrix& m1, const matrix& m2) {
     matrix res (m1.height, m2.width);
     
@@ -90,21 +153,25 @@ matrix operator* (const matrix& m1, const matrix& m2) {
     return res;
 }
 
-matrix operator* (const double& d, const matrix& mat) {
-    matrix res (mat.height, mat.width);
-    for(int i = 0; i < mat.height; i++){
-        for(int j = 0; j < mat.width; j++) res(i, j) = mat(i, j) * d;
-    }
-
-    return res;
-}
-
-//Prints matrix to stream
-ostream& operator<<(ostream& stream, const matrix& mat){
+/*
+Writes the matrix to a stream. 
+The matrix entries are of fixed length 5.
+*/
+ostream& operator<<(ostream& stream, const matrix& mat) {
     for(int i = 0; i < mat.height; i++){
         for(int j = 0; j < mat.width; j++) stream << setw(5) << mat(i, j) << " ";
         cout << "\n";
     }
+
+    return stream;
+}
+/*
+Writes the vector to a stream. 
+The vector entries are of fixed length 5.
+*/
+ostream& operator<<(ostream& stream, const vector& vec) {
+    for(int i = 0; i < vec.size(); i++) stream << setw(5) << vec[i] << " ";
+    cout << "\n";
 
     return stream;
 }
