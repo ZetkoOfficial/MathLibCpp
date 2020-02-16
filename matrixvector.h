@@ -8,8 +8,8 @@
 typedef std::vector<std::vector<double>> m_def;
 
 namespace matrixvector {
-using namespace std;
 
+using namespace std;
 typedef std::vector<double> vector;
 
 class matrix {
@@ -30,13 +30,20 @@ class matrix {
     }
 
     //Reference of value at row i and column j
-    double& operator() (int i, int j) {
-        return matrix_arr[i][j];
-    }
+    double& operator() (int i, int j) { return matrix_arr[i][j]; }
 
     //Value at row i and column j
-    double operator() (int i, int j) const {
-        return matrix_arr[i][j];
+    double operator() (int i, int j) const { return matrix_arr[i][j]; }
+
+    //Returns vector representing row i.
+    vector row(int i) const { return matrix_arr[i]; }
+
+    //Returns vector representing column j.
+    vector column(int j) const { 
+        vector res (height);
+        for(int i = 0; i < height; i++) res[i] = matrix_arr[i][j];
+
+        return res; 
     }
 
     /*
@@ -49,6 +56,13 @@ class matrix {
         for(int i = 0; i < height; i++){
             for(int j = 0; j < width; j++) res(j, i) = matrix_arr[i][j];
         }
+
+        return res;
+    }
+
+    static matrix create_identity(int size) {
+        matrix res (size, size);
+        for(int i = 0; i < size; i++) res(i, i) = 1;
 
         return res;
     }
@@ -164,6 +178,16 @@ matrix operator* (const matrix& m1, const matrix& m2) {
 }
 
 /*
+Returns vector which is the result of matrix-vector multiplication.
+*/
+vector operator* (const matrix& mat, const vector& vec) {
+    vector res (vec.size());
+    for(int j = 0; j < vec.size(); j++) res = res + vec[j] * mat.column(j);
+
+    return res;
+}
+
+/*
 Returns the dot product of vectors.
 */
 double operator* (const vector& v1, const vector& v2) {
@@ -202,4 +226,22 @@ ostream& operator<<(ostream& stream, const vector& vec) {
     return stream;
 }
 
+/*
+Uses binary exponentiation to quickly calculate power of square matrix.
+*/
+matrix pow(const matrix& mat, int power) {
+    if(power == 0) return matrix::create_identity(mat.height);
+
+    if(power % 2 == 0) return pow(mat, power/2) * pow(mat, power/2);
+    return mat * pow(mat, power - 1);
 }
+
+}
+
+/*
+Allows usage of operators on vector.
+*/
+using matrixvector::operator*;
+using matrixvector::operator+;
+using matrixvector::operator-;
+using matrixvector::operator<<;
