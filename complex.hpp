@@ -118,7 +118,7 @@ namespace complex {
     Calculates the square root of a complex number.
     */
     c_double sqrt(const c_double& c) { 
-        return { std::sqrt( (abs(c) + c.re()) / 2 ), (c.im() > 0 ? 1 : -1) * std::sqrt( (abs(c) - c.re()) / 2 ) };
+        return { std::sqrt( (abs(c) + c.re()) / 2 ), (c.im() >= 0 ? 1 : -1) * std::sqrt( (abs(c) - c.re()) / 2 ) };
     }
 }
 
