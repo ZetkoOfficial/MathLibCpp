@@ -26,6 +26,15 @@ namespace calculus {
 
         return res;
     }
+
+    /*
+    Calculates x-coordinate of the local minimum of the function using gradient descent(factor - step_size, steps - step_count).
+    It uses the derivative method(using derivative_step_size) defined in the calculus namespace.
+    */
+    double minimum(std::function<double(double)> f, double start_x, int step_count = 10000, double step_size = 0.001, double derivative_step_size = 0.0001) {
+        for(int i = 0; i < step_count; i++) start_x += -step_size * derivative(f, start_x, derivative_step_size);
+        return start_x;
+    }
 }
 
 #endif
