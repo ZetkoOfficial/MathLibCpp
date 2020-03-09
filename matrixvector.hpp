@@ -161,6 +161,18 @@ vector operator* (const vector& vec, const double& d) {
     return apply_function(vec, [d](double i) {return i * d;});
 }
 
+/*Returns if two matrices consist of same elements in the same order.*/
+bool operator== (const matrix& m1, const matrix& m2){
+    if(m1.height != m2.height || m1.width != m2.width) return false;
+    for(int y = 0; y < m1.height; y++) { if(m1.row(y) != m2.row(y)) return false; }
+
+    return true;
+}
+
+/*Returns if two matrices do not consist of same elements in the same order.*/
+bool operator!= (const matrix& m1, const matrix& m2){
+    return !(m1 == m2);
+}
 /*
 Returns matrix which is the result of matrix multiplication.
 */ 
@@ -243,6 +255,8 @@ matrix pow(const matrix& mat, int power) {
 Allows usage of operators without namespace.
 */
 using matrixvector::operator*;
+using matrixvector::operator==;
+using matrixvector::operator!=;
 using matrixvector::operator+;
 using matrixvector::operator-;
 using matrixvector::operator<<;

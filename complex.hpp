@@ -88,6 +88,20 @@ namespace complex {
     }
 
     /*
+    Returns if two complex numbers are equal.
+    */
+    bool operator==(const c_double& a, const c_double& b) {
+        return a.re() == b.re() && a.im() == b.im();
+    }
+
+    /*
+    Returns if two complex numbers are not equal.
+    */
+    bool operator!=(const c_double& a, const c_double& b) {
+        return a.re() != b.re() || a.im() != b.im();
+    }
+
+    /*
     Writes the complex number to a stream.
     Format: a + bi, a - bi or a.
     */
@@ -125,6 +139,8 @@ namespace complex {
 /*
 Allows usage of operators without namespace.
 */
+using complex::operator==;
+using complex::operator!=;
 using complex::operator*;
 using complex::operator+;
 using complex::operator/;
