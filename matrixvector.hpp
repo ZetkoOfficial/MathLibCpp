@@ -5,205 +5,60 @@
 #include <iomanip>
 #include <cmath>
 #include <functional>
-#include <vector>
 #include <string>
-
-typedef std::vector<std::vector<double>> m_def;
+#include <array>
+#include <vector>
 
 namespace matrixvector {
-typedef std::vector<double> vector;
 
-class matrix {
-    std::vector<std::vector<double>> matrix_arr;
-    public:
-    int width, height;
-
-    matrix() = default;
-    matrix(int height, int width) {
-        this->height = height;
-        this->width = width;
-        this->matrix_arr = std::vector<std::vector<double>> (height, std::vector<double>(width));
-    }
-    matrix(std::vector<std::vector<double>> matrix_arr) {
-        this->height = matrix_arr.size();
-        this->width = matrix_arr[0].size();
-        this->matrix_arr = matrix_arr;
-    }
-
-    //Reference of value at row i and column j
-    double& operator() (int i, int j) { return matrix_arr[i][j]; }
-
-    //Value at row i and column j
-    double operator() (int i, int j) const { return matrix_arr[i][j]; }
-
-    //Returns vector representing row i.
-    vector row(int i) const { return matrix_arr[i]; }
-
-    //Returns vector representing column j.
-    vector column(int j) const { 
-        vector res (height);
-        for(int i = 0; i < height; i++) res[i] = matrix_arr[i][j];
-
-        return res; 
-    }
-
-    /*
-    Returns the transpose of this matrix.
-
-    Time complexity: O(width*height).
-    */
-    matrix T() {
-        matrix res (width, height);
-        for(int i = 0; i < height; i++){
-            for(int j = 0; j < width; j++) res(j, i) = matrix_arr[i][j];
-        }
-
-        return res;
-    }
-
-    static matrix create_identity(int size) {
-        matrix res (size, size);
-        for(int i = 0; i < size; i++) res(i, i) = 1;
-
-        return res;
-    }
-};
-/*
-Applies a function which determines an entry ij of the result matrix, from entry ij. 
-*/
-matrix apply_function(const matrix& mat, std::function<double(double)> f){
-    matrix res (mat.height, mat.width);
-    for(int i = 0; i < mat.height; i++){
-        for(int j = 0; j < mat.width; j++) res(i, j) = f(mat(i, j));
-    }
-
-    return res;
-}
-
-/*
-Applies a function which determines an entry ij of the result matrix, from entries ij of two matrices. 
-*/
-matrix apply_function(const matrix& m1, const matrix& m2, std::function<double(double, double)> f){
-    matrix res (m1.height, m1.width);
-    for(int i = 0; i < m1.height; i++){
-        for(int j = 0; j < m1.width; j++) res(i, j) = f(m1(i, j), m2(i, j));
-    }
-
-    return res;
-}
-
-/*
-Applies a function which determines an entry i of the result vector, from entry i. 
-*/
-vector apply_function(const vector& vec, std::function<double(double)> f){
-    vector res (vec.size());
-    for(int i = 0; i < vec.size(); i++) res[i] = f(vec[i]);
-
-    return res;
-}
-
-/*
-Applies a function which determines an entry i of the result vector, from entries i of two vectors. 
-*/
-vector apply_function(const vector& v1, const vector& v2, std::function<double(double, double)> f){
-    vector res (v1.size());
-    for(int i = 0; i < v1.size(); i++) res[i] = f(v1[i], v2[i]);
-
-    return res;
-}
-
-/*
-Returns the length of the vector.
-*/
-double abs(const vector& vec) {
-    double res = 0;
-    for(int i = 0; i < vec.size(); i++) res += vec[i] * vec[i];
-
-    return sqrt(res);
-}
-
-/*Adds matrices entry-wise.*/
-matrix operator+ (const matrix& m1, const matrix& m2){
-    return apply_function(m1, m2, [](double x, double y){return x + y;});
-}
-/*Adds vectors entry-wise.*/
-vector operator+ (const vector& v1, const vector& v2){
-    return apply_function(v1, v2, [](double x, double y){return x + y;});
-}
-
-
-/*Subtracts matrices entry-wise.*/
-matrix operator- (const matrix& m1, const matrix& m2){
-    return apply_function(m1, m2, [](double x, double y){return x - y;});
-}
-/*Subtracts vectors entry-wise.*/
-vector operator- (const vector& v1, const vector& v2){
-    return apply_function(v1, v2, [](double x, double y){return x - y;});
-}
-
-
-/*Returns matrix with every entry scaled by a constant.*/
-matrix operator* (const double& d, const matrix& mat) {
-    return apply_function(mat, [d](double i) {return i * d;});
-}
-/*Returns vector with every entry scaled by a constant.*/
-vector operator* (const double& d, const vector& vec) {
-    return apply_function(vec, [d](double i) {return i * d;});
-}
-
-
-/*Returns matrix with every entry scaled by a constant.*/
-matrix operator* (const matrix& mat, const double& d) {
-    return apply_function(mat, [d](double i) {return i * d;});
-}
-/*Returns vector with every entry scaled by a constant.*/
-vector operator* (const vector& vec, const double& d) {
-    return apply_function(vec, [d](double i) {return i * d;});
-}
-
-/*Returns if two matrices consist of same elements in the same order.*/
-bool operator== (const matrix& m1, const matrix& m2){
-    if(m1.height != m2.height || m1.width != m2.width) return false;
-    for(int y = 0; y < m1.height; y++) { if(m1.row(y) != m2.row(y)) return false; }
-
-    return true;
-}
-
-/*Returns if two matrices do not consist of same elements in the same order.*/
-bool operator!= (const matrix& m1, const matrix& m2){
-    return !(m1 == m2);
-}
-/*
-Returns matrix which is the result of matrix multiplication.
-*/ 
-matrix operator* (const matrix& m1, const matrix& m2) {
-    matrix res (m1.height, m2.width);
+template<int dimensions>
+struct vector_f {
+    std::array<double, dimensions> data;
     
-    for(int i = 0; i < m1.height; i++){
-        for(int j = 0; j < m2.width; j++) {
-            double cell_value = 0;
-            for(int r = 0; r < m1.width; r++) cell_value += m1(i, r) * m2(r, j);
-            res(i, j) = cell_value; 
-        }
+    vector_f() { data.fill(0); };
+    vector_f(double x, double y, double z = 0) {
+        if(dimensions == 2) { data[0] = x; data[1] = y; }
+        if(dimensions >= 3) { data[0] = x; data[1] = y; data[2] = z; }
     }
+    vector_f(std::array<double, dimensions> data) { this->data = data; }
 
-    return res;
+    constexpr int size() const { return dimensions; }
+
+    double& operator[](int i) { return data[i]; }
+    double operator[](int i) const { return data[i]; }
+};
+
+/*Adds vector_fs entry-wise.*/
+template <int dimensions>
+vector_f<dimensions> operator+ (const vector_f<dimensions>& v1, const vector_f<dimensions>& v2) {
+    vector_f<dimensions> res; for(int i = 0; i < res.size(); i++) res[i] = v1[i] + v2[i]; return res;
+}
+/*Subtracts vector_fs entry-wise.*/
+template <int dimensions>
+vector_f<dimensions> operator- (const vector_f<dimensions>& v1, const vector_f<dimensions>& v2){
+    vector_f<dimensions> res; for(int i = 0; i < res.size(); i++) res[i] = v1[i] - v2[i]; return res;
+}
+/*Returns vector_f with every entry scaled by a constant.*/
+template <int dimensions>
+vector_f<dimensions> operator* (const double& d, const vector_f<dimensions>& vec) {
+    vector_f<dimensions> res; for(int i = 0; i < res.size(); i++) res[i] = vec[i] * d; return res;
+}
+/*Returns vector_f with every entry scaled by a constant.*/
+template <int dimensions>
+vector_f<dimensions> operator* (const vector_f<dimensions>& vec, const double& d) {
+    vector_f<dimensions> res; for(int i = 0; i < res.size(); i++) res[i] = vec[i] * d; return res;
+}
+/*Returns vector_f with every entry divided by a constant.*/
+template <int dimensions>
+vector_f<dimensions> operator/ (const vector_f<dimensions>& vec, const double& d) {
+    vector_f<dimensions> res; for(int i = 0; i < res.size(); i++) res[i] = vec[i] / d; return res;
 }
 
 /*
-Returns vector which is the result of matrix-vector multiplication.
+Returns the dot product of vector_fs.
 */
-vector operator* (const matrix& mat, const vector& vec) {
-    vector res (vec.size());
-    for(int j = 0; j < vec.size(); j++) res = res + vec[j] * mat.column(j);
-
-    return res;
-}
-
-/*
-Returns the dot product of vectors.
-*/
-double operator* (const vector& v1, const vector& v2) {
+template <int dimensions>
+double operator* (const vector_f<dimensions>& v1, const vector_f<dimensions>& v2) {
     double res = 0;
     for(int i = 0; i < v1.size(); i++) res += v1[i] * v2[i];
 
@@ -211,25 +66,11 @@ double operator* (const vector& v1, const vector& v2) {
 }
 
 /*
-Writes the matrix to a stream. 
-The matrix entries are of fixed length 5.
+Writes the vector_f to a stream. 
+The vector_f entries are of fixed length 5.
 */
-std::ostream& operator<<(std::ostream& stream, const matrix& mat) {
-    stream << "Matrix " << mat.height << "x" << mat.width << "\n";
-
-    for(int i = 0; i < mat.height; i++){
-        stream << "| ";
-        for(int j = 0; j < mat.width; j++) stream << std::fixed << std::setprecision(5) << std::setw(10) << mat(i, j) << " ";
-        stream << " |\n";
-    }
-
-    return stream;
-}
-/*
-Writes the vector to a stream. 
-The vector entries are of fixed length 5.
-*/
-std::ostream& operator<<(std::ostream& stream, const vector& vec) {
+template <int dimensions>
+std::ostream& operator<<(std::ostream& stream, const vector_f<dimensions>& vec) {
     stream << "Vector " << vec.size() << "x1 \n";
     
     stream << "| ";
@@ -239,11 +80,183 @@ std::ostream& operator<<(std::ostream& stream, const vector& vec) {
     return stream;
 }
 
+/*Compares if two vector_fs are equal*/
+template <int dimensions>
+bool operator==(const vector_f<dimensions>& v1, const vector_f<dimensions>& v2) {
+    return v1.data == v2.data;
+}
+
+/*
+Applies a function which determines an entry i of the result vector_f, from entry i. 
+*/
+template <int dimensions>
+static vector_f<dimensions> apply_function(const vector_f<dimensions>& vec, std::function<double(double)> f){
+    vector_f<dimensions> res;
+    for(int i = 0; i < res.size(); i++) res[i] = f(vec[i]);
+
+    return res;
+}
+/*
+Applies a function which determines an entry i of the result vector_f, from entries i of two vector_fs. 
+*/
+template <int dimensions>
+vector_f<dimensions> apply_function(const vector_f<dimensions>& v1, const vector_f<dimensions>& v2, const std::function<double(double, double)> f){
+    vector_f<dimensions> res;
+    for(int i = 0; i < res.size(); i++) res[i] = f(v1[i], v2[i]);
+
+    return res;
+}
+
+/*Returns length of the vector_f*/
+template <int dimensions>
+double abs(const vector_f<dimensions>& vec){ return sqrt(vec * vec); }
+    
+/*Creates a unit vector_f with the same direction as vec*/
+template <int dimensions>
+vector_f<dimensions> normalize(const vector_f<dimensions>& vec){ 
+    if(vec[0] == 0 && vec[1] == 0) return {0,0};
+    double len = abs(vec);
+    return vec / len;
+}
+
+typedef vector_f<2> vector;
+typedef vector_f<2> vector2;
+typedef vector_f<3> vector3;
+
+template <int SIZE>
+struct matrix {
+    std::array<matrixvector::vector_f<SIZE>, SIZE> data;
+
+    matrix() { data.fill(matrixvector::vector_f<SIZE>()); }
+    matrix(std::vector<std::vector<double>> data) {
+        for(int j = 0; j < SIZE; j++){
+            for(int i = 0; i < SIZE; i++) this->data[j][i] = data[j][i];
+        }
+    }
+    int size() const { return SIZE; } 
+
+    /*Returns reference to the row vector*/
+    matrixvector::vector_f<SIZE>& operator[](int j) { return data[j]; }
+    /*Returns copy of the row vector*/
+    matrixvector::vector_f<SIZE> operator[](int j) const { return data[j]; }
+
+    /*Creates the column vector */
+    matrixvector::vector_f<SIZE> column(int i) const {
+        matrixvector::vector_f<SIZE> column;
+        for(int j = 0; j < SIZE; j++) column[j] = data[j][i];
+
+        return column;
+    }
+
+    /*Creates the transpose of this matrix*/
+    matrix<SIZE> T() const {
+        matrix<SIZE> result;
+        for(int j = 0; j < SIZE; j++) result[j] = column(j);
+        return result;
+    }
+
+    /*Creates an identity matrix*/
+    static matrix<SIZE> create_identity() {
+        matrix<SIZE> res;
+        for(int i = 0; i < SIZE; i++) res[i][i] = 1;
+        
+        return res;
+    }
+};
+
+/*Adds matrices entry-wise.*/
+template <int SIZE>
+matrix<SIZE> operator+ (const matrix<SIZE>& m1, const matrix<SIZE>& m2){
+    matrix<SIZE> res;
+    for(int j = 0; j < SIZE; j++) res[j] = m1[j] + m2[j];
+
+    return res;
+}
+
+/*Subtracts matrices entry-wise.*/
+template <int SIZE>
+matrix<SIZE> operator- (const matrix<SIZE>& m1, const matrix<SIZE>& m2){
+    matrix<SIZE> res;
+    for(int j = 0; j < SIZE; j++) res[j] = m1[j] - m2[j];
+
+    return res;
+}
+
+/*Returns matrix with every entry scaled by a constant*/
+template <int SIZE>
+matrix<SIZE> operator* (const matrix<SIZE>& m1, double d){
+    matrix<SIZE> res;
+    for(int j = 0; j < SIZE; j++) res[j] = m1[j] * d;
+
+    return res;
+}
+
+/*Returns matrix with every entry scaled by a constant*/
+template <int SIZE>
+matrix<SIZE> operator* (double d, const matrix<SIZE>& m2){ return m2 * d; }
+
+/*Compares matrices entry wise*/
+template <int SIZE1, int SIZE2>
+bool operator== (const matrix<SIZE1>& m1, const matrix<SIZE2>& m2){
+    if(SIZE1 != SIZE2) return false;
+    for(int j = 0; j < SIZE1; j++){
+        if(!(m1[j] == m2[j])) return false;
+    }
+
+    return true;
+}
+
+/*
+Returns matrix which is the result of matrix multiplication.
+*/ 
+template <int SIZE>
+matrix<SIZE> operator* (const matrix<SIZE>& m1, const matrix<SIZE>& m2) {
+    matrix<SIZE> res;
+    
+    for(int i = 0; i < SIZE; i++){
+        for(int j = 0; j < SIZE; j++) {
+            double cell_value = 0;
+            for(int r = 0; r < SIZE; r++) cell_value += m1[i][r] * m2[r][j];
+            res[i][j] = cell_value; 
+        }
+    }
+
+    return res;
+}
+
+/*
+Writes the matrix to a stream. 
+The matrix entries are of fixed length 5.
+*/
+template <int SIZE>
+std::ostream& operator<<(std::ostream& stream, const matrix<SIZE>& mat) {
+    stream << "Matrix " << SIZE << "x" << SIZE << "\n";
+    for(int j = 0; j < SIZE; j++){
+        stream << "| ";
+        for(int i = 0; i < SIZE; i++) stream << std::fixed << std::setprecision(5) << std::setw(10) << mat[j][i] << " ";
+        stream << " |\n";
+    }
+    return stream;
+}
+
+/*
+Returns vector which is the result of matrix-vector multiplication.
+*/
+template <int SIZE>
+matrixvector::vector_f<SIZE> operator* (const matrix<SIZE>& mat, const matrixvector::vector_f<SIZE>& vec) {
+    matrixvector::vector_f<SIZE> res;
+    for(int j = 0; j < SIZE; j++) res = res + vec[j] * mat.column(j);
+
+    return res;
+}
+
+
 /*
 Uses binary exponentiation to quickly calculate power of square matrix.
 */
-matrix pow(const matrix& mat, int power) {
-    if(power == 0) return matrix::create_identity(mat.height);
+template <int SIZE>
+matrix<SIZE> pow(const matrix<SIZE>& mat, int power) {
+    if(power == 0) return matrix<SIZE>::create_identity();
 
     if(power % 2 == 0) return pow(mat, power/2) * pow(mat, power/2);
     return mat * pow(mat, power - 1);
@@ -251,14 +264,5 @@ matrix pow(const matrix& mat, int power) {
 
 }
 
-/*
-Allows usage of operators without namespace.
-*/
-using matrixvector::operator*;
-using matrixvector::operator==;
-using matrixvector::operator!=;
-using matrixvector::operator+;
-using matrixvector::operator-;
-using matrixvector::operator<<;
-
+typedef std::vector<std::vector<double>> m_def;
 #endif
