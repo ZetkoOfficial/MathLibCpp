@@ -20,7 +20,7 @@ struct vector_f {
         if(dimensions == 2) { data[0] = x; data[1] = y; }
         if(dimensions >= 3) { data[0] = x; data[1] = y; data[2] = z; }
     }
-    vector_f(std::array<double, dimensions> data) { this->data = data; }
+    vector_f(const std::vector<double>& data) { for(int i = 0; i < dimensions; i++) this->data[i] = data[i]; }
 
     constexpr int size() const { return dimensions; }
 
@@ -148,6 +148,23 @@ struct matrix {
         return column;
     }
 
+    matrix<SIZE-1> create_minor(int j, int i) const {
+        matrix<SIZE-1> result;
+        int jc = 0, ic = 0;
+        for(int jt = 0; jt < SIZE; jt++) {
+            if(jt == j) continue;
+            for(int it = 0; it < SIZE; it++){
+                if(it == i) continue;
+                result[jc][ic] = data[jt][it];
+                ic++;
+            }
+            jc++;
+            ic = 0;
+        }
+
+        return result;
+    }
+
     /*Creates the transpose of this matrix*/
     matrix<SIZE> T() const {
         matrix<SIZE> result;
@@ -194,6 +211,10 @@ matrix<SIZE> operator* (const matrix<SIZE>& m1, double d){
 /*Returns matrix with every entry scaled by a constant*/
 template <int SIZE>
 matrix<SIZE> operator* (double d, const matrix<SIZE>& m2){ return m2 * d; }
+
+/*Returns matrix with every entry divided by a constant*/
+template <int SIZE>
+matrix<SIZE> operator/ (const matrix<SIZE>& m2, double d){ return m2 * (1.0/d); }
 
 /*Compares matrices entry wise*/
 template <int SIZE1, int SIZE2>
@@ -260,6 +281,49 @@ matrix<SIZE> pow(const matrix<SIZE>& mat, int power) {
 
     if(power % 2 == 0) return pow(mat, power/2) * pow(mat, power/2);
     return mat * pow(mat, power - 1);
+}
+
+
+double abs(const matrix<1>& mat){
+    return mat[0][0];
+}
+
+template <int SIZE>
+double abs(const matrix<SIZE>& mat){
+    double res = 0;
+    for(int i = 0; i < SIZE; i++){
+        res += mat[0][i] * (i % 2 == 0 ? 1 : -1 ) * abs(mat.create_minor(0, i)); 
+    }
+    return res;
+}
+
+template <int SIZE>
+matrix<SIZE> invert(const matrix<SIZE>& mat) {
+    matrix<SIZE> res;
+    for(int j = 0; j < SIZE; j++){
+        for(int i = 0; i < SIZE; i++){
+            res[j][i] = ((i+j) % 2 == 0 ? 1 : -1) * abs(mat.create_minor(j, i));
+        }
+    }
+    return res.T() / abs(mat);
+}
+
+template <int SIZE>
+vector_f<SIZE> solve_gauss(matrix<SIZE> mat, vector_f<SIZE> b) {
+    for(int i = 0; i< SIZE-1; i++) {
+        b[i] = b[i] / mat[i][i]; mat[i] = mat[i] / mat[i][i]; 
+        for(int j = i+1; j < SIZE; j++){
+            b[j] = b[j] - mat[j][i] * b[i]; mat[j] = mat[j] - mat[j][i] * mat[i];;
+        }
+    }
+    for(int i = SIZE-1; i >= 0; i--) {
+        b[i] = b[i] / mat[i][i]; mat[i] = mat[i] / mat[i][i]; 
+        for(int j = i-1; j >= 0; j--){
+            b[j] = b[j] - mat[j][i] * b[i]; mat[j] = mat[j] - mat[j][i] * mat[i]; 
+        }
+    }
+    
+    return b;
 }
 
 }

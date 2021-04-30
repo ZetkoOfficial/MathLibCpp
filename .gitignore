@@ -33,7 +33,8 @@
 
 test
 test.cpp
-test1.cpp
+test2.cpp
+test2
 matrixvector_old.hpp
 
 .vscode/*
