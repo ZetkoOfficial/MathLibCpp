@@ -29,11 +29,10 @@ bool test_operation(bool github, vector<function<bool(void)>> check_functions, s
         cout << RESET << "Test case " << index++ << ": " << ((tmp = f()) ? (GREEN + "passed.") : (RED + "failed.")) << endl;
         if(time) { total_time += time_f(f); } success &= tmp;
     }
+    if(github) cout << "::endgroup::" << endl;
     cout << RESET <<(success ? (GREEN_B + "[ Test passed ]") : (RED_B + "[ Test failed ]")) << RESET;
     if(time) cout << " in "  << total_time << " ns" << endl;
-    
-    if(github) cout << "::endgroup::" << endl;
-    else cout << endl;
+    cout << endl;
 
     return success;
 }
