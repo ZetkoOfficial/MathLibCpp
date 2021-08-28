@@ -31,10 +31,5 @@
 *.out
 *.app
 
-test
-test.cpp
-test2.cpp
-test2
 matrixvector_old.hpp
-
-.vscode/*
+test
