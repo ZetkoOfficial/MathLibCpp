@@ -22,11 +22,8 @@ double time_f(function<bool(void)> f){
 
 bool test_operation(bool github, vector<function<bool(void)>> check_functions, string test_name, bool time = true){
     int index = 1; bool success = 1, tmp; double total_time = 0;
-    
-    cout << RESET;
-
     if(github) cout << "::group::";
-    cout << "Running " << check_functions.size() << " subtests (" << test_name << ")" << endl;
+    cout << RESET << "Running " << check_functions.size() << " subtests (" << test_name << ")" << endl;
 
     for(auto f : check_functions) {
         cout << RESET << "Test case " << index++ << ": " << ((tmp = f()) ? (GREEN + "passed.") : (RED + "failed.")) << endl;
