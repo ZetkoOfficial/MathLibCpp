@@ -9,4 +9,4 @@ jobs:
     - name: Checkout current branch
       uses: actions/checkout@v2
     - name: Run test cases
-      run: make test
+      run: make test_github
